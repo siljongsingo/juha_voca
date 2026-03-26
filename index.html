@@ -8,31 +8,62 @@
 <meta name="apple-mobile-web-app-title" content="Juha's Voca"/>
 <title>Juha's Voca Study</title>
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
-body{font-family:-apple-system,'Noto Sans KR',sans-serif;}
-button{cursor:pointer;font-family:inherit;}
-button:active{opacity:0.75;}
-input{font-family:inherit;}
-.page{display:none;min-height:100vh;}
-.page.active{display:block;}
-.card-wrap{perspective:1000px;cursor:pointer;margin-bottom:20px;}
-.card-inner{position:relative;height:260px;transform-style:preserve-3d;transition:transform 0.48s cubic-bezier(.4,.2,.2,1);}
-.card-inner.flipped{transform:rotateY(180deg);}
-.card-front,.card-back{position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;}
-.card-back{transform:rotateY(180deg);}
-.progress-bar{height:3px;border-radius:2px;margin-bottom:20px;overflow:hidden;}
-.progress-fill{height:100%;border-radius:2px;transition:width 0.3s;}
-header{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;padding-top:calc(12px + env(safe-area-inset-top));}
-body{padding-top:0;}
+:root {
+  --sat: env(safe-area-inset-top, 44px);
+  --sab: env(safe-area-inset-bottom, 20px);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+body { font-family: -apple-system, 'Noto Sans KR', sans-serif; }
+button { cursor: pointer; font-family: inherit; }
+button:active { opacity: 0.75; }
+input { font-family: inherit; }
+
+/* 페이지 */
+.page { display: none; height: 100vh; flex-direction: column; overflow: hidden; }
+.page.active { display: flex; }
+
+/* 공통 헤더 — 노치 아래로 */
+.top-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  padding-top: calc(var(--sat) + 12px);
+  z-index: 10;
+}
+
+/* 스크롤 영역 */
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--sab) + 20px);
+}
+
+/* 단어 페이지 고정 영역 */
+.words-fixed {
+  flex-shrink: 0;
+  padding: 0 20px 12px;
+}
+
+/* 카드 플립 */
+.card-wrap { perspective: 1000px; cursor: pointer; margin-bottom: 20px; }
+.card-inner { position: relative; height: 240px; transform-style: preserve-3d; transition: transform 0.48s cubic-bezier(.4,.2,.2,1); }
+.card-inner.flipped { transform: rotateY(180deg); }
+.card-face {
+  position: absolute; inset: 0;
+  -webkit-backface-visibility: hidden; backface-visibility: hidden;
+  border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.card-back { transform: rotateY(180deg); }
 </style>
 </head>
 <body>
-
-<!-- HOME -->
 <div class="page active" id="page-home"></div>
-<!-- GAME -->
 <div class="page" id="page-game"></div>
-<!-- WORDS -->
 <div class="page" id="page-words"></div>
 
 <script>
@@ -123,191 +154,178 @@ const VOCAB={
   ]
 };
 
-const posColor={'v':'#3b82f6','n':'#10b981','a':'#f59e0b','ad':'#ef4444','v/n':'#8b5cf6','n/v':'#8b5cf6','a/n':'#f97316','n/a':'#f97316'};
-const posLabel={'v':'동사','n':'명사','a':'형용사','ad':'부사','v/n':'동/명','n/v':'명/동','a/n':'형/명','n/a':'명/형'};
-const DARK={bg:'#0d1117',card:'#161b22',border:'#30363d',txt:'#e6edf3',sub:'#8b949e',acc:'#7c3aed',acc2:'#db2777',inputBg:'#21262d',shadow:'rgba(0,0,0,0.4)',badge:'#21262d'};
-const LIGHT={bg:'#f6f8fa',card:'#ffffff',border:'#d0d7de',txt:'#1f2328',sub:'#57606a',acc:'#6e40c9',acc2:'#bf4b8a',inputBg:'#f6f8fa',shadow:'rgba(31,35,40,0.12)',badge:'#eaeef2'};
+const PC={'v':'#3b82f6','n':'#10b981','a':'#f59e0b','ad':'#ef4444','v/n':'#8b5cf6','n/v':'#8b5cf6','a/n':'#f97316','n/a':'#f97316'};
+const PL={'v':'동사','n':'명사','a':'형용사','ad':'부사','v/n':'동/명','n/v':'명/동','a/n':'형/명','n/a':'명/형'};
+const DK={bg:'#0d1117',card:'#161b22',border:'#30363d',txt:'#e6edf3',sub:'#8b949e',acc:'#7c3aed',acc2:'#db2777',inp:'#21262d',sh:'rgba(0,0,0,0.4)',badge:'#21262d'};
+const LT={bg:'#f6f8fa',card:'#ffffff',border:'#d0d7de',txt:'#1f2328',sub:'#57606a',acc:'#6e40c9',acc2:'#bf4b8a',inp:'#f6f8fa',sh:'rgba(31,35,40,0.12)',badge:'#eaeef2'};
 
-let dark=true, week=1, gameCards=[], gameIdx=0, gameFlipped=false;
-function T(){return dark?DARK:LIGHT;}
-function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+let dark=true, week=1, gCards=[], gIdx=0, gFlip=false;
+const T=()=>dark?DK:LT;
+const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
 
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
+  const el=document.getElementById('page-'+id);
+  el.classList.add('active');
+  document.body.style.background=T().bg;
   if(id==='home') renderHome();
   if(id==='game') renderGame();
-  if(id==='words') renderWords();
+  if(id==='words') renderWords('');
 }
 
-function applyTheme(){
-  const t=T();
-  document.body.style.background=t.bg;
-  showPage(document.querySelector('.page.active').id.replace('page-',''));
-}
-
-// ── HOME ──────────────────────────────────────────
+// ── HOME ─────────────────────────────────────────
 function renderHome(){
   const t=T();
   document.getElementById('page-home').innerHTML=`
-  <div style="min-height:100vh;background:${t.bg};display:flex;flex-direction:column;">
-    <header style="background:${t.card};border-bottom:1px solid ${t.border};padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;">
+    <div class="top-bar" style="background:${t.card};border-bottom:1px solid ${t.border};">
       <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,${t.acc},${t.acc2});display:flex;align-items:center;justify-content:center;font-size:15px;">📖</div>
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,${t.acc},${t.acc2});display:flex;align-items:center;justify-content:center;font-size:16px;">📖</div>
         <span style="color:${t.txt};font-weight:700;font-size:15px;">Juha's Voca Study</span>
       </div>
-      <button onclick="dark=!dark;applyTheme();" style="background:transparent;border:1px solid ${t.border};color:${t.sub};border-radius:6px;padding:4px 10px;font-size:13px;">
-        ${dark?'☀️ Light':'🌙 Dark'}
-      </button>
-    </header>
-    <div style="padding:32px 20px 20px;text-align:center;">
-      <div style="display:inline-block;padding:4px 12px;background:${t.acc}22;border:1px solid ${t.acc}44;border-radius:20px;margin-bottom:16px;">
-        <span style="color:${t.acc};font-size:12px;font-weight:600;">Voca Study Group</span>
+      <button onclick="dark=!dark;showPage('home');" style="background:transparent;border:1px solid ${t.border};color:${t.sub};border-radius:6px;padding:5px 12px;font-size:13px;">${dark?'☀️ Light':'🌙 Dark'}</button>
+    </div>
+    <div class="scroll-area">
+      <div style="padding:28px 20px 16px;text-align:center;">
+        <div style="display:inline-block;padding:4px 14px;background:${t.acc}22;border:1px solid ${t.acc}44;border-radius:20px;margin-bottom:14px;">
+          <span style="color:${t.acc};font-size:12px;font-weight:600;">Voca Study Group</span>
+        </div>
+        <h1 style="font-size:26px;font-weight:900;margin:0 0 6px;color:${t.acc};">Juha's Voca Study</h1>
+        <p style="color:${t.sub};font-size:13px;margin:0 0 2px;">단어 공부를 더 재미있게</p>
+        <p style="color:${t.acc};font-size:13px;font-weight:700;margin:0;">행복한교회 청소년부</p>
       </div>
-      <h1 style="font-size:28px;font-weight:900;margin:0 0 6px;color:${t.acc};">Juha's Voca Study</h1>
-      <p style="color:${t.sub};font-size:13px;margin:0 0 2px;">단어 공부를 더 재미있게</p>
-      <p style="color:${t.acc};font-size:13px;font-weight:600;margin:0;">행복한교회 청소년부</p>
-    </div>
-    <div style="margin:0 20px 24px;padding:12px 16px;background:${t.card};border:1px solid ${t.border};border-radius:8px;display:flex;gap:20px;justify-content:center;">
-      ${[['📦','Weeks','2'],['📝','Words','80'],['🎮','Games','2']].map(([ic,lb,vl])=>`
-        <div style="text-align:center;">
-          <div style="font-size:18px;">${ic}</div>
-          <div style="color:${t.txt};font-weight:700;font-size:15px;">${vl}</div>
-          <div style="color:${t.sub};font-size:11px;">${lb}</div>
-        </div>`).join('')}
-    </div>
-    <div style="padding:0 20px;flex:1;">
-      <button onclick="showPage('game')" style="width:100%;padding:16px;margin-bottom:10px;background:${t.card};border:1px solid ${t.border};border-radius:8px;text-align:left;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px ${t.shadow};">
-        <div style="width:44px;height:44px;border-radius:8px;background:${t.acc}22;border:1px solid ${t.acc}44;display:flex;align-items:center;justify-content:center;font-size:22px;">🃏</div>
-        <div style="flex:1;text-align:left;">
-          <div style="color:${t.txt};font-size:16px;font-weight:700;">Card Game</div>
-          <div style="color:${t.sub};font-size:12px;margin-top:2px;">카드 플립으로 단어 테스트</div>
-        </div>
-        <span style="color:${t.sub};font-size:18px;">›</span>
-      </button>
-      <button onclick="showPage('words')" style="width:100%;padding:16px;margin-bottom:10px;background:${t.card};border:1px solid ${t.border};border-radius:8px;text-align:left;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px ${t.shadow};">
-        <div style="width:44px;height:44px;border-radius:8px;background:#0ea5e922;border:1px solid #0ea5e944;display:flex;align-items:center;justify-content:center;font-size:22px;">📚</div>
-        <div style="flex:1;text-align:left;">
-          <div style="color:${t.txt};font-size:16px;font-weight:700;">Voca~ Voca!!</div>
-          <div style="color:${t.sub};font-size:12px;margin-top:2px;">전체 단어 목록 보기</div>
-        </div>
-        <span style="color:${t.sub};font-size:18px;">›</span>
-      </button>
-    </div>
-    <footer style="padding:24px 20px;text-align:center;border-top:1px solid ${t.border};margin-top:24px;">
-      <p style="color:${t.sub};font-size:12px;margin:0 0 4px;">Made with ❤️ by <strong style="color:${t.acc};">사랑하는 아빠</strong></p>
-      <p style="color:${t.sub};font-size:11px;margin:0;opacity:0.6;">Juha's Voca Study · 행복한교회 청소년부</p>
-    </footer>
-  </div>`;
+      <div style="margin:0 20px 20px;padding:14px;background:${t.card};border:1px solid ${t.border};border-radius:10px;display:flex;gap:0;justify-content:space-around;">
+        ${[['📦','Weeks','2'],['📝','Words','80'],['🎮','Games','2']].map(([ic,lb,vl])=>`
+          <div style="text-align:center;">
+            <div style="font-size:20px;">${ic}</div>
+            <div style="color:${t.txt};font-weight:700;font-size:16px;">${vl}</div>
+            <div style="color:${t.sub};font-size:11px;">${lb}</div>
+          </div>`).join('')}
+      </div>
+      <div style="padding:0 20px;">
+        <button onclick="showPage('game')" style="width:100%;padding:18px;margin-bottom:12px;background:${t.card};border:1px solid ${t.border};border-radius:10px;text-align:left;display:flex;align-items:center;gap:14px;box-shadow:0 1px 4px ${t.sh};">
+          <div style="width:48px;height:48px;border-radius:10px;background:${t.acc}22;border:1px solid ${t.acc}44;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🃏</div>
+          <div style="flex:1;text-align:left;">
+            <div style="color:${t.txt};font-size:17px;font-weight:700;">Card Game</div>
+            <div style="color:${t.sub};font-size:12px;margin-top:3px;">카드 플립으로 단어 테스트</div>
+          </div>
+          <span style="color:${t.sub};font-size:20px;">›</span>
+        </button>
+        <button onclick="showPage('words')" style="width:100%;padding:18px;margin-bottom:12px;background:${t.card};border:1px solid ${t.border};border-radius:10px;text-align:left;display:flex;align-items:center;gap:14px;box-shadow:0 1px 4px ${t.sh};">
+          <div style="width:48px;height:48px;border-radius:10px;background:#0ea5e922;border:1px solid #0ea5e944;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">📚</div>
+          <div style="flex:1;text-align:left;">
+            <div style="color:${t.txt};font-size:17px;font-weight:700;">Voca~ Voca!!</div>
+            <div style="color:${t.sub};font-size:12px;margin-top:3px;">전체 단어 목록 보기</div>
+          </div>
+          <span style="color:${t.sub};font-size:20px;">›</span>
+        </button>
+      </div>
+      <footer style="padding:24px 20px;text-align:center;border-top:1px solid ${t.border};margin-top:16px;">
+        <p style="color:${t.sub};font-size:12px;margin:0 0 4px;">Made with ❤️ by <strong style="color:${t.acc};">사랑하는 아빠</strong></p>
+        <p style="color:${t.sub};font-size:11px;margin:0;opacity:0.6;">Juha's Voca Study · 행복한교회 청소년부</p>
+      </footer>
+    </div>`;
 }
 
-// ── GAME ──────────────────────────────────────────
-function buildGameCards(w){
-  gameCards=shuffle(VOCAB[w]).map(c=>({...c,showEn:Math.random()>0.5}));
-  gameIdx=0; gameFlipped=false;
-}
+// ── GAME ─────────────────────────────────────────
+function buildGame(w){ gCards=shuffle(VOCAB[w]).map(c=>({...c,showEn:Math.random()>0.5})); gIdx=0; gFlip=false; }
 
 function renderGame(){
-  const t=T();
-  const card=gameCards[gameIdx]||{};
-  const front=card.showEn?card.en:card.ko;
-  const back=card.showEn?card.ko:card.en;
-  const fLabel=card.showEn?'🇺🇸 English':'🇰🇷 한국어';
-  const bLabel=card.showEn?'🇰🇷 한국어':'🇺🇸 English';
-  const pct=Math.round(((gameIdx+1)/gameCards.length)*100);
-  const pc=posColor[card.pos]||'#888';
-  const pl=posLabel[card.pos]||card.pos;
+  const t=T(), c=gCards[gIdx]||{};
+  const front=c.showEn?c.en:c.ko, back=c.showEn?c.ko:c.en;
+  const fL=c.showEn?'🇺🇸 English':'🇰🇷 한국어', bL=c.showEn?'🇰🇷 한국어':'🇺🇸 English';
+  const pc=PC[c.pos]||'#888', pl=PL[c.pos]||c.pos;
+  const pct=Math.round(((gIdx+1)/gCards.length)*100);
   document.getElementById('page-game').innerHTML=`
-  <div style="min-height:100vh;background:${t.bg};">
-    <header style="background:${t.card};border-bottom:1px solid ${t.border};padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;">
-      <button onclick="showPage('home')" style="background:${t.acc}22;border:1px solid ${t.acc}55;color:${t.acc};font-size:15px;font-weight:700;padding:8px 16px;border-radius:8px;display:flex;align-items:center;gap:8px;">🏠 홈으로</button>
-      <button onclick="dark=!dark;applyTheme();" style="background:transparent;border:1px solid ${t.border};color:${t.sub};border-radius:6px;padding:4px 10px;font-size:13px;">${dark?'☀️ Light':'🌙 Dark'}</button>
-    </header>
-    <div style="padding:20px;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-        <span style="font-size:20px;">🃏</span>
-        <h2 style="color:${t.txt};font-size:20px;font-weight:700;margin:0;">Card Game</h2>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:16px;">
-        <button onclick="week=1;buildGameCards(1);renderGame();" style="flex:1;padding:8px 0;background:${week===1?`linear-gradient(135deg,${t.acc},${t.acc2})`:'transparent'};color:${week===1?'#fff':t.sub};border:1px solid ${week===1?'transparent':t.border};border-radius:6px;font-size:13px;font-weight:${week===1?700:400};">Week 1</button>
-        <button onclick="week=2;buildGameCards(2);renderGame();" style="flex:1;padding:8px 0;background:${week===2?`linear-gradient(135deg,${t.acc},${t.acc2})`:'transparent'};color:${week===2?'#fff':t.sub};border:1px solid ${week===2?'transparent':t.border};border-radius:6px;font-size:13px;font-weight:${week===2?700:400};">Week 2</button>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <span style="color:${t.sub};font-size:12px;">${gameIdx+1} / ${gameCards.length} cards</span>
-        <button onclick="buildGameCards(week);renderGame();" style="background:transparent;border:1px solid ${t.border};color:${t.sub};border-radius:6px;padding:3px 10px;font-size:12px;">🔀 Shuffle</button>
-      </div>
-      <div style="height:3px;background:${t.border};border-radius:2px;margin-bottom:20px;overflow:hidden;">
-        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${t.acc},${t.acc2});border-radius:2px;transition:width 0.3s;"></div>
-      </div>
-      <div class="card-wrap" onclick="gameFlipped=!gameFlipped;document.getElementById('card-inner').classList.toggle('flipped');">
-        <div class="card-inner${gameFlipped?' flipped':''}" id="card-inner">
-          <div class="card-front" style="background:${t.card};border:1px solid ${t.border};box-shadow:0 3px 12px ${t.shadow};">
-            <span style="background:${t.acc}22;color:${t.acc};border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600;margin-bottom:18px;">${fLabel}</span>
-            <p style="color:${t.txt};font-size:${card.showEn?'36px':'18px'};font-weight:800;text-align:center;margin:0;line-height:1.3;word-break:keep-all;">${front}</p>
-            <p style="color:${t.sub};font-size:11px;margin-top:18px;">Tap to flip 👆</p>
-          </div>
-          <div class="card-back" style="background:${dark?'#161b22':'#f0f6ff'};border:1px solid ${t.acc}55;box-shadow:0 3px 12px ${t.shadow};">
-            <span style="background:${t.acc2}22;color:${t.acc2};border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600;margin-bottom:18px;">${bLabel}</span>
-            <p style="color:${t.txt};font-size:${card.showEn?'18px':'28px'};font-weight:800;text-align:center;margin:0;line-height:1.4;word-break:keep-all;">${back}</p>
-            <div style="background:${pc}22;color:${pc};border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;margin-top:14px;">${pl}</div>
+    <div class="top-bar" style="background:${t.card};border-bottom:1px solid ${t.border};">
+      <button onclick="showPage('home')" style="background:${t.acc}22;border:1px solid ${t.acc}55;color:${t.acc};font-size:14px;font-weight:700;padding:8px 16px;border-radius:8px;">🏠 홈으로</button>
+      <button onclick="dark=!dark;renderGame();" style="background:transparent;border:1px solid ${t.border};color:${t.sub};border-radius:6px;padding:5px 12px;font-size:13px;">${dark?'☀️ Light':'🌙 Dark'}</button>
+    </div>
+    <div class="scroll-area">
+      <div style="padding:16px 20px 20px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+          <span style="font-size:20px;">🃏</span>
+          <h2 style="color:${t.txt};font-size:20px;font-weight:700;margin:0;">Card Game</h2>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <button onclick="week=1;buildGame(1);renderGame();" style="flex:1;padding:9px 0;background:${week===1?`linear-gradient(135deg,${t.acc},${t.acc2})`:'transparent'};color:${week===1?'#fff':t.sub};border:1px solid ${week===1?'transparent':t.border};border-radius:6px;font-size:13px;font-weight:${week===1?700:400};">Week 1</button>
+          <button onclick="week=2;buildGame(2);renderGame();" style="flex:1;padding:9px 0;background:${week===2?`linear-gradient(135deg,${t.acc},${t.acc2})`:'transparent'};color:${week===2?'#fff':t.sub};border:1px solid ${week===2?'transparent':t.border};border-radius:6px;font-size:13px;font-weight:${week===2?700:400};">Week 2</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="color:${t.sub};font-size:12px;">${gIdx+1} / ${gCards.length} cards</span>
+          <button onclick="buildGame(week);renderGame();" style="background:transparent;border:1px solid ${t.border};color:${t.sub};border-radius:6px;padding:3px 10px;font-size:12px;">🔀 Shuffle</button>
+        </div>
+        <div style="height:3px;background:${t.border};border-radius:2px;margin-bottom:18px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${t.acc},${t.acc2});border-radius:2px;"></div>
+        </div>
+        <div class="card-wrap" onclick="gFlip=!gFlip;document.getElementById('ci').classList.toggle('flipped');">
+          <div class="card-inner${gFlip?' flipped':''}" id="ci">
+            <div class="card-face" style="background:${t.card};border:1px solid ${t.border};box-shadow:0 3px 12px ${t.sh};">
+              <span style="background:${t.acc}22;color:${t.acc};border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600;margin-bottom:16px;">${fL}</span>
+              <p style="color:${t.txt};font-size:${c.showEn?'34px':'17px'};font-weight:800;text-align:center;margin:0;line-height:1.3;word-break:keep-all;">${front}</p>
+              <p style="color:${t.sub};font-size:11px;margin-top:16px;">Tap to flip 👆</p>
+            </div>
+            <div class="card-face card-back" style="background:${dark?'#161b22':'#f0f6ff'};border:1px solid ${t.acc}55;box-shadow:0 3px 12px ${t.sh};">
+              <span style="background:${t.acc2}22;color:${t.acc2};border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600;margin-bottom:16px;">${bL}</span>
+              <p style="color:${t.txt};font-size:${c.showEn?'17px':'26px'};font-weight:800;text-align:center;margin:0;line-height:1.4;word-break:keep-all;">${back}</p>
+              <div style="background:${pc}22;color:${pc};border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;margin-top:14px;">${pl}</div>
+            </div>
           </div>
         </div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="if(gIdx>0){gIdx--;gFlip=false;renderGame();}" ${gIdx===0?'disabled':''} style="flex:1;padding:14px;background:transparent;border:1px solid ${t.border};color:${gIdx===0?t.sub:t.txt};border-radius:8px;font-size:16px;font-weight:700;opacity:${gIdx===0?0.4:1};">← Prev</button>
+          <button onclick="if(gIdx<gCards.length-1){gIdx++;gFlip=false;renderGame();}" ${gIdx===gCards.length-1?'disabled':''} style="flex:2;padding:14px;background:${gIdx===gCards.length-1?'transparent':`linear-gradient(135deg,${t.acc},${t.acc2})`};border:${gIdx===gCards.length-1?`1px solid ${t.border}`:'none'};color:${gIdx===gCards.length-1?t.sub:'white'};border-radius:8px;font-size:16px;font-weight:700;opacity:${gIdx===gCards.length-1?0.4:1};">Next →</button>
+        </div>
       </div>
-      <div style="display:flex;gap:10px;">
-        <button onclick="if(gameIdx>0){gameIdx--;gameFlipped=false;renderGame();}" ${gameIdx===0?'disabled':''} style="flex:1;padding:14px;background:transparent;border:1px solid ${t.border};color:${gameIdx===0?t.sub:t.txt};border-radius:8px;font-size:16px;font-weight:700;opacity:${gameIdx===0?0.4:1};">← Prev</button>
-        <button onclick="if(gameIdx<gameCards.length-1){gameIdx++;gameFlipped=false;renderGame();}" ${gameIdx===gameCards.length-1?'disabled':''} style="flex:2;padding:14px;background:${gameIdx===gameCards.length-1?'transparent':`linear-gradient(135deg,${t.acc},${t.acc2})`};border:${gameIdx===gameCards.length-1?`1px solid ${t.border}`:'none'};color:${gameIdx===gameCards.length-1?t.sub:'white'};border-radius:8px;font-size:16px;font-weight:700;opacity:${gameIdx===gameCards.length-1?0.4:1};">Next →</button>
-      </div>
-    </div>
-  </div>`;
+    </div>`;
 }
 
-// ── WORDS ─────────────────────────────────────────
-function renderWords(search=''){
+// ── WORDS ────────────────────────────────────────
+function renderWords(search){
   const t=T();
   const words=VOCAB[week].filter(w=>w.en.toLowerCase().includes(search.toLowerCase())||w.ko.includes(search));
   document.getElementById('page-words').innerHTML=`
-  <div style="min-height:100vh;background:${t.bg};">
-    <header style="background:${t.card};border-bottom:1px solid ${t.border};padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;">
-      <button onclick="showPage('home')" style="background:${t.acc}22;border:1px solid ${t.acc}55;color:${t.acc};font-size:15px;font-weight:700;padding:8px 16px;border-radius:8px;display:flex;align-items:center;gap:8px;">🏠 홈으로</button>
-      <button onclick="dark=!dark;applyTheme();" style="background:transparent;border:1px solid ${t.border};color:${t.sub};border-radius:6px;padding:4px 10px;font-size:13px;">${dark?'☀️ Light':'🌙 Dark'}</button>
-    </header>
-    <div style="padding:20px;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+    <div class="top-bar" style="background:${t.card};border-bottom:1px solid ${t.border};">
+      <button onclick="showPage('home')" style="background:${t.acc}22;border:1px solid ${t.acc}55;color:${t.acc};font-size:14px;font-weight:700;padding:8px 16px;border-radius:8px;">🏠 홈으로</button>
+      <button onclick="dark=!dark;renderWords(document.getElementById('srch').value||'');" style="background:transparent;border:1px solid ${t.border};color:${t.sub};border-radius:6px;padding:5px 12px;font-size:13px;">${dark?'☀️ Light':'🌙 Dark'}</button>
+    </div>
+    <div class="words-fixed" style="background:${t.bg};padding-top:14px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:0 0px;">
         <span style="font-size:20px;">📚</span>
         <h2 style="color:${t.txt};font-size:20px;font-weight:700;margin:0;">Voca~ Voca!!</h2>
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:16px;">
-        <button onclick="week=1;renderWords('');" style="flex:1;padding:8px 0;background:${week===1?`linear-gradient(135deg,${t.acc},${t.acc2})`:'transparent'};color:${week===1?'#fff':t.sub};border:1px solid ${week===1?'transparent':t.border};border-radius:6px;font-size:13px;font-weight:${week===1?700:400};">Week 1</button>
-        <button onclick="week=2;renderWords('');" style="flex:1;padding:8px 0;background:${week===2?`linear-gradient(135deg,${t.acc},${t.acc2})`:'transparent'};color:${week===2?'#fff':t.sub};border:1px solid ${week===2?'transparent':t.border};border-radius:6px;font-size:13px;font-weight:${week===2?700:400};">Week 2</button>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button onclick="week=1;renderWords('');" style="flex:1;padding:9px 0;background:${week===1?`linear-gradient(135deg,${t.acc},${t.acc2})`:'transparent'};color:${week===1?'#fff':t.sub};border:1px solid ${week===1?'transparent':t.border};border-radius:6px;font-size:13px;font-weight:${week===1?700:400};">Week 1</button>
+        <button onclick="week=2;renderWords('');" style="flex:1;padding:9px 0;background:${week===2?`linear-gradient(135deg,${t.acc},${t.acc2})`:'transparent'};color:${week===2?'#fff':t.sub};border:1px solid ${week===2?'transparent':t.border};border-radius:6px;font-size:13px;font-weight:${week===2?700:400};">Week 2</button>
       </div>
-      <div style="position:relative;margin-bottom:14px;">
+      <div style="position:relative;margin-bottom:8px;">
         <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:${t.sub};font-size:14px;">🔍</span>
-        <input oninput="renderWords(this.value)" value="${search}" placeholder="단어 검색..." style="width:100%;padding:9px 12px 9px 34px;background:${t.inputBg};border:1px solid ${t.border};border-radius:8px;color:${t.txt};font-size:14px;outline:none;"/>
+        <input id="srch" oninput="renderWords(this.value)" value="${search}" placeholder="단어 검색..." style="width:100%;padding:9px 12px 9px 34px;background:${t.inp};border:1px solid ${t.border};border-radius:8px;color:${t.txt};font-size:14px;outline:none;"/>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid ${t.border};">
         <span style="color:${t.sub};font-size:12px;">${words.length}개 단어</span>
-        <div style="display:flex;gap:6px;">
-          ${['v','n','a','ad'].map(p=>`<span style="background:${posColor[p]}22;color:${posColor[p]};border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">${posLabel[p]}</span>`).join('')}
+        <div style="display:flex;gap:5px;">
+          ${['v','n','a','ad'].map(p=>`<span style="background:${PC[p]}22;color:${PC[p]};border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">${PL[p]}</span>`).join('')}
         </div>
       </div>
+    </div>
+    <div class="scroll-area" style="padding:0 20px;">
+      <div style="height:8px;"></div>
       ${words.map(w=>`
-        <div style="background:${t.card};border:1px solid ${t.border};border-radius:8px;padding:13px 14px;margin-bottom:6px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 1px 3px ${t.shadow};">
+        <div style="background:${t.card};border:1px solid ${t.border};border-radius:8px;padding:13px 14px;margin-bottom:7px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 1px 3px ${t.sh};">
           <div style="width:28px;height:28px;background:${t.badge};border-radius:6px;display:flex;align-items:center;justify-content:center;color:${t.sub};font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px;">${w.n}</div>
           <div style="flex:1;">
             <div style="display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-bottom:5px;">
               <span style="color:${t.txt};font-size:20px;font-weight:800;">${w.en}</span>
-              <span style="background:${posColor[w.pos]||'#888'}22;color:${posColor[w.pos]||'#888'};border-radius:5px;padding:2px 7px;font-size:11px;font-weight:700;">${posLabel[w.pos]||w.pos}</span>
+              <span style="background:${PC[w.pos]||'#888'}22;color:${PC[w.pos]||'#888'};border-radius:5px;padding:2px 7px;font-size:11px;font-weight:700;">${PL[w.pos]||w.pos}</span>
             </div>
             <div style="color:${t.sub};font-size:14px;line-height:1.6;word-break:keep-all;">${w.ko}</div>
           </div>
         </div>`).join('')}
       <div style="height:20px;"></div>
-    </div>
-  </div>`;
+    </div>`;
 }
 
-// 초기화
-buildGameCards(1);
+buildGame(1);
 renderHome();
 </script>
 </body>
