@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Juha's Voca"/>
+<title>Juha's Voca Study</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+body{font-family:-apple-system,'Noto Sans KR',sans-serif;}
+button{cursor:pointer;font-family:inherit;}
+button:active{opacity:0.75;}
+input{font-family:inherit;}
+.page{display:none;min-height:100vh;}
+.page.active{display:block;}
+.card-wrap{perspective:1000px;cursor:pointer;margin-bottom:20px;}
+.card-inner{position:relative;height:260px;transform-style:preserve-3d;transition:transform 0.48s cubic-bezier(.4,.2,.2,1);}
+.card-inner.flipped{transform:rotateY(180deg);}
+.card-front,.card-back{position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;}
+.card-back{transform:rotateY(180deg);}
+.progress-bar{height:3px;border-radius:2px;margin-bottom:20px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:2px;transition:width 0.3s;}
+header{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div class="page active" id="page-home"></div>
+<!-- GAME -->
+<div class="page" id="page-game"></div>
+<!-- WORDS -->
+<div class="page" id="page-words"></div>
+
+<script>
+const VOCAB={
+  1:[
+    {n:1,en:"approach",ko:"접근하다, 다가가다 / 접근(법)",pos:"v/n"},
+    {n:2,en:"nevertheless",ko:"그럼에도 불구하고",pos:"ad"},
+    {n:3,en:"reliable",ko:"믿을 수 있는, 확실한",pos:"a"},
+    {n:4,en:"promote",ko:"증진하다, 홍보하다 / 승진시키다",pos:"v"},
+    {n:5,en:"adjust",ko:"조정하다, 맞추다, 적응하다",pos:"v"},
+    {n:6,en:"predict",ko:"예언하다, 예측하다",pos:"v"},
+    {n:7,en:"install",ko:"설치하다, 설비하다",pos:"v"},
+    {n:8,en:"alternative",ko:"대안 / 대체 가능한",pos:"n/a"},
+    {n:9,en:"variable",ko:"변하기 쉬운, 변덕스러운 / 변수",pos:"a/n"},
+    {n:10,en:"various",ko:"여러 가지의, 다양한",pos:"a"},
+    {n:11,en:"norm",ko:"표준, 일반적인 것, 규범",pos:"n"},
+    {n:12,en:"appoint",ko:"임명하다 / (시간·약속) 정하다",pos:"v"},
+    {n:13,en:"locate",ko:"(위치를) 알아내다 / (위치에) 두다",pos:"v"},
+    {n:14,en:"ingredient",ko:"재료, 성분, 구성요소",pos:"n"},
+    {n:15,en:"handle",ko:"다루다, 처리하다 / 손잡이",pos:"v/n"},
+    {n:16,en:"originate",ko:"비롯되다, 시작되다",pos:"v"},
+    {n:17,en:"standard",ko:"기준, 표준 / 일반적인, 표준의",pos:"n/a"},
+    {n:18,en:"caution",ko:"조심, 신중, 경고 / 경고하다",pos:"n/v"},
+    {n:19,en:"barrier",ko:"장애물, 장벽",pos:"n"},
+    {n:20,en:"anticipate",ko:"예상하다, 예측하다 / 기대하다",pos:"v"},
+    {n:21,en:"breed",ko:"새끼를 낳다, 번식하다 / 품종",pos:"v/n"},
+    {n:22,en:"complicated",ko:"복잡한",pos:"a"},
+    {n:23,en:"organization",ko:"조직, 기구, 단체",pos:"n"},
+    {n:24,en:"shelter",ko:"피난처, 보호소 / 보호하다",pos:"n/v"},
+    {n:25,en:"derive",ko:"얻다, 끌어내다, 유래하다",pos:"v"},
+    {n:26,en:"illusion",ko:"환상, 환각 / 착각, 오해",pos:"n"},
+    {n:27,en:"particular",ko:"특정한, 특별한 / 까다로운",pos:"a"},
+    {n:28,en:"bias",ko:"선입견, 편견, 성향",pos:"n/v"},
+    {n:29,en:"available",ko:"이용할 수 있는, 시간이 있는",pos:"a"},
+    {n:30,en:"essential",ko:"매우 중요한, 필수의 / 필수적인 것",pos:"a/n"},
+    {n:31,en:"severe",ko:"심한, 혹독한, 엄한",pos:"a"},
+    {n:32,en:"prescribe",ko:"(약을) 처방하다 / 규정하다",pos:"v"},
+    {n:33,en:"describe",ko:"서술하다, 묘사하다",pos:"v"},
+    {n:34,en:"participant",ko:"참가자",pos:"n"},
+    {n:35,en:"assert",ko:"주장하다, 단언하다",pos:"v"},
+    {n:36,en:"distribute",ko:"나누어주다, 분배하다, 유통시키다",pos:"v"},
+    {n:37,en:"audience",ko:"관중, 청중 / 시청자, 독자",pos:"n"},
+    {n:38,en:"former",ko:"이전의, 전자의 / (the~) 전자",pos:"a/n"},
+    {n:39,en:"latter",ko:"후반의, 후자의 / (the~) 후자",pos:"a/n"},
+    {n:40,en:"perceive",ko:"인지하다, 알아차리다 / 여기다",pos:"v"},
+  ],
+  2:[
+    {n:1,en:"combine",ko:"결합하다, 겸비하다",pos:"v"},
+    {n:2,en:"proceed",ko:"계속하다, 진행하다 / 나아가다",pos:"v"},
+    {n:3,en:"obvious",ko:"명백한, 분명한",pos:"a"},
+    {n:4,en:"mechanism",ko:"기계, 장치 / 방식 / 구조",pos:"n"},
+    {n:5,en:"concentrate",ko:"집중하다 / 농축시키다",pos:"v"},
+    {n:6,en:"crisis",ko:"위기, 결정적인 시기",pos:"n"},
+    {n:7,en:"inclined",ko:"~하는 경향이 있는 / 할 마음이 있는",pos:"a"},
+    {n:8,en:"emotion",ko:"감정, 정서",pos:"n"},
+    {n:9,en:"represent",ko:"대표하다 / 표현하다, 나타내다",pos:"v"},
+    {n:10,en:"respondent",ko:"응답자",pos:"n"},
+    {n:11,en:"relevant",ko:"관련 있는, 적절한",pos:"a"},
+    {n:12,en:"factual",ko:"사실에 입각한",pos:"a"},
+    {n:13,en:"concern",ko:"걱정시키다 / 걱정, 관심사",pos:"v/n"},
+    {n:14,en:"classify",ko:"분류하다, 구분하다",pos:"v"},
+    {n:15,en:"circumstance",ko:"환경, 상황 / 형편, 처지",pos:"n"},
+    {n:16,en:"involve",ko:"포함하다, 수반하다 / 관련시키다",pos:"v"},
+    {n:17,en:"occasion",ko:"때, 경우 / 특별한 일, 행사",pos:"n"},
+    {n:18,en:"migrate",ko:"이동하다 / 이주하다",pos:"v"},
+    {n:19,en:"virtual",ko:"사실상의, 실제의 / 가상의",pos:"a"},
+    {n:20,en:"clarify",ko:"명백하게 하다, 분명히 말하다",pos:"v"},
+    {n:21,en:"artificial",ko:"인공의, 인조의 / 거짓인, 꾸민",pos:"a"},
+    {n:22,en:"strive",ko:"노력하다, 분발하다",pos:"v"},
+    {n:23,en:"surrounding",ko:"주변의 / 주위, 환경",pos:"a/n"},
+    {n:24,en:"domestic",ko:"국내의 / 가정의 / 길들여진",pos:"a"},
+    {n:25,en:"stereotype",ko:"고정 관념",pos:"n"},
+    {n:26,en:"vast",ko:"거대한, 막대한",pos:"a"},
+    {n:27,en:"extreme",ko:"극도의, 극심한 / 극단, 극도",pos:"a/n"},
+    {n:28,en:"intention",ko:"의도, 목적",pos:"n"},
+    {n:29,en:"strategy",ko:"전략, 전술",pos:"n"},
+    {n:30,en:"patent",ko:"특허(권) / 특허를 받은",pos:"n/a"},
+    {n:31,en:"transport",ko:"수송하다, 나르다 / 수송, 운송",pos:"v/n"},
+    {n:32,en:"confirm",ko:"사실임을 보여주다 / 확인하다",pos:"v"},
+    {n:33,en:"grant",ko:"주다, 수여하다 / 보조금",pos:"v/n"},
+    {n:34,en:"resist",ko:"저항하다 / 견디다",pos:"v"},
+    {n:35,en:"acknowledge",ko:"인정하다 / 감사를 표하다",pos:"v"},
+    {n:36,en:"crucial",ko:"결정적인, 중대한",pos:"a"},
+    {n:37,en:"typical",ko:"전형적인, 대표적인 / 보통의",pos:"a"},
+    {n:38,en:"ignore",ko:"무시하다, 못 본 척하다",pos:"v"},
+    {n:39,en:"demand",ko:"요구하다 / 요구, 수요",pos:"v/n"},
+    {n:40,en:"supply",ko:"공급하다 / 공급, 보급품",pos:"v/n"},
+  ]
+};
+
+const posColor={'v':'#3b82f6','n':'#10b981','a':'#f59e0b','ad':'#ef4444','v/n':'#8b5cf6','n/v':'#8b5cf6','a/n':'#f97316','n/a':'#f97316'};
+const posLabel={'v':'동사','n':'명사','a':'형용사','ad':'부사','v/n':'동/명','n/v':'명/동','a/n':'형/명','n/a':'명/형'};
+const DARK={bg:'#0d1117',card:'#161b22',border:'#30363d',txt:'#e6edf3',sub:'#8b949e',acc:'#7c3aed',acc2:'#db2777',inputBg:'#21262d',shadow:'rgba(0,0,0,0.4)',badge:'#21262d'};
+const LIGHT={bg:'#f6f8fa',card:'#ffffff',border:'#d0d7de',txt:'#1f2328',sub:'#57606a',acc:'#6e40c9',acc2:'#bf4b8a',inputBg:'#f6f8fa',shadow:'rgba(31,35,40,0.12)',badge:'#eaeef2'};
+
+let dark=true, week=1, gameCards=[], gameIdx=0, gameFlipped=false;
+function T(){return dark?DARK:LIGHT;}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(id==='home') renderHome();
+  if(id==='game') renderGame();
+  if(id==='words') renderWords();
+}
+
+function applyTheme(){
+  const t=T();
+  document.body.style.background=t.bg;
+  showPage(document.querySelector('.page.active').id.replace('page-',''));
+}
+
+// ── HOME ──────────────────────────────────────────
+function renderHome(){
+  const t=T();
+  document.getElementById('page-home').innerHTML=`
+  <div style="min-height:100vh;background:${t.bg};display:flex;flex-direction:column;">
+    <header style="background:${t.card};border-bottom:1px solid ${t.border};padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,${t.acc},${t.acc2});display:flex;align-items:center;justify-content:center;font-size:15px;">📖</div>
+        <span style="color:${t.txt};font-weight:700;font-size:15px;">Juha's Voca Study</span>
+      </div>
+      <button onclick="dark=!dark;applyTheme();" style="background:transparent;border:1px solid ${t.border};color:${t.sub};border-radius:6px;padding:4px 10px;font-size:13px;">
+        ${dark?'☀️ Light':'🌙 Dark'}
+      </button>
+    </header>
+    <div style="padding:32px 20px 20px;text-align:center;">
+      <div style="display:inline-block;padding:4px 12px;background:${t.acc}22;border:1px solid ${t.acc}44;border-radius:20px;margin-bottom:16px;">
+        <span style="color:${t.acc};font-size:12px;font-weight:600;">Voca Study Group</span>
+      </div>
+      <h1 style="font-size:28px;font-weight:900;margin:0 0 6px;color:${t.acc};">Juha's Voca Study</h1>
+      <p style="color:${t.sub};font-size:13px;margin:0 0 2px;">단어 공부를 더 재미있게</p>
+      <p style="color:${t.acc};font-size:13px;font-weight:600;margin:0;">행복한교회 청소년부</p>
+    </div>
+    <div style="margin:0 20px 24px;padding:12px 16px;background:${t.card};border:1px solid ${t.border};border-radius:8px;display:flex;gap:20px;justify-content:center;">
+      ${[['📦','Weeks','2'],['📝','Words','80'],['🎮','Games','2']].map(([ic,lb,vl])=>`
+        <div style="text-align:center;">
+          <div style="font-size:18px;">${ic}</div>
+          <div style="color:${t.txt};font-weight:700;font-size:15px;">${vl}</div>
+          <div style="color:${t.sub};font-size:11px;">${lb}</div>
+        </div>`).join('')}
+    </div>
+    <div style="padding:0 20px;flex:1;">
+      <button onclick="showPage('game')" style="width:100%;padding:16px;margin-bottom:10px;background:${t.card};border:1px solid ${t.border};border-radius:8px;text-align:left;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px ${t.shadow};">
+        <div style="width:44px;height:44px;border-radius:8px;background:${t.acc}22;border:1px solid ${t.acc}44;display:flex;align-items:center;justify-content:center;font-size:22px;">🃏</div>
+        <div style="flex:1;text-align:left;">
+          <div style="color:${t.txt};font-size:16px;font-weight:700;">Card Game</div>
+          <div style="color:${t.sub};font-size:12px;margin-top:2px;">카드 플립으로 단어 테스트</div>
+        </div>
+        <span style="color:${t.sub};font-size:18px;">›</span>
+      </button>
+      <button onclick="showPage('words')" style="width:100%;padding:16px;margin-bottom:10px;background:${t.card};border:1px solid ${t.border};border-radius:8px;text-align:left;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px ${t.shadow};">
+        <div style="width:44px;height:44px;border-radius:8px;background:#0ea5e922;border:1px solid #0ea5e944;display:flex;align-items:center;justify-content:center;font-size:22px;">📚</div>
+        <div style="flex:1;text-align:left;">
+          <div style="color:${t.txt};font-size:16px;font-weight:700;">Voca~ Voca!!</div>
+          <div style="color:${t.sub};font-size:12px;margin-top:2px;">전체 단어 목록 보기</div>
+        </div>
+        <span style="color:${t.sub};font-size:18px;">›</span>
+      </button>
+    </div>
+    <footer style="padding:24px 20px;text-align:center;border-top:1px solid ${t.border};margin-top:24px;">
+      <p style="color:${t.sub};font-size:12px;margin:0 0 4px;">Made with ❤️ by <strong style="color:${t.acc};">사랑하는 아빠</strong></p>
+      <p style="color:${t.sub};font-size:11px;margin:0;opacity:0.6;">Juha's Voca Study · 행복한교회 청소년부</p>
+    </footer>
+  </div>`;
+}
+
+// ── GAME ──────────────────────────────────────────
+function buildGameCards(w){
+  gameCards=shuffle(VOCAB[w]).map(c=>({...c,showEn:Math.random()>0.5}));
+  gameIdx=0; gameFlipped=false;
+}
+
+function renderGame(){
+  const t=T();
+  const card=gameCards[gameIdx]||{};
+  const front=card.showEn?card.en:card.ko;
+  const back=card.showEn?card.ko:card.en;
+  const fLabel=card.showEn?'🇺🇸 English':'🇰🇷 한국어';
+  const bLabel=card.showEn?'🇰🇷 한국어':'🇺🇸 English';
+  const pct=Math.round(((gameIdx+1)/gameCards.length)*100);
+  const pc=posColor[card.pos]||'#888';
+  const pl=posLabel[card.pos]||card.pos;
+  document.getElementById('page-game').innerHTML=`
+  <div style="min-height:100vh;background:${t.bg};">
+    <header style="background:${t.card};border-bottom:1px solid ${t.border};padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;">
+      <button onclick="showPage('home')" style="background:${t.acc}22;border:1px solid ${t.acc}55;color:${t.acc};font-size:15px;font-weight:700;padding:8px 16px;border-radius:8px;display:flex;align-items:center;gap:8px;">🏠 홈으로</button>
+      <button onclick="dark=!dark;applyTheme();" style="background:transparent;border:1px solid ${t.border};color:${t.sub};border-radius:6px;padding:4px 10px;font-size:13px;">${dark?'☀️ Light':'🌙 Dark'}</button>
+    </header>
+    <div style="padding:20px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+        <span style="font-size:20px;">🃏</span>
+        <h2 style="color:${t.txt};font-size:20px;font-weight:700;margin:0;">Card Game</h2>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button onclick="week=1;buildGameCards(1);renderGame();" style="flex:1;padding:8px 0;background:${week===1?`linear-gradient(135deg,${t.acc},${t.acc2})`:'transparent'};color:${week===1?'#fff':t.sub};border:1px solid ${week===1?'transparent':t.border};border-radius:6px;font-size:13px;font-weight:${week===1?700:400};">Week 1</button>
+        <button onclick="week=2;buildGameCards(2);renderGame();" style="flex:1;padding:8px 0;background:${week===2?`linear-gradient(135deg,${t.acc},${t.acc2})`:'transparent'};color:${week===2?'#fff':t.sub};border:1px solid ${week===2?'transparent':t.border};border-radius:6px;font-size:13px;font-weight:${week===2?700:400};">Week 2</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="color:${t.sub};font-size:12px;">${gameIdx+1} / ${gameCards.length} cards</span>
+        <button onclick="buildGameCards(week);renderGame();" style="background:transparent;border:1px solid ${t.border};color:${t.sub};border-radius:6px;padding:3px 10px;font-size:12px;">🔀 Shuffle</button>
+      </div>
+      <div style="height:3px;background:${t.border};border-radius:2px;margin-bottom:20px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${t.acc},${t.acc2});border-radius:2px;transition:width 0.3s;"></div>
+      </div>
+      <div class="card-wrap" onclick="gameFlipped=!gameFlipped;document.getElementById('card-inner').classList.toggle('flipped');">
+        <div class="card-inner${gameFlipped?' flipped':''}" id="card-inner">
+          <div class="card-front" style="background:${t.card};border:1px solid ${t.border};box-shadow:0 3px 12px ${t.shadow};">
+            <span style="background:${t.acc}22;color:${t.acc};border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600;margin-bottom:18px;">${fLabel}</span>
+            <p style="color:${t.txt};font-size:${card.showEn?'36px':'18px'};font-weight:800;text-align:center;margin:0;line-height:1.3;word-break:keep-all;">${front}</p>
+            <p style="color:${t.sub};font-size:11px;margin-top:18px;">Tap to flip 👆</p>
+          </div>
+          <div class="card-back" style="background:${dark?'#161b22':'#f0f6ff'};border:1px solid ${t.acc}55;box-shadow:0 3px 12px ${t.shadow};">
+            <span style="background:${t.acc2}22;color:${t.acc2};border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600;margin-bottom:18px;">${bLabel}</span>
+            <p style="color:${t.txt};font-size:${card.showEn?'18px':'28px'};font-weight:800;text-align:center;margin:0;line-height:1.4;word-break:keep-all;">${back}</p>
+            <div style="background:${pc}22;color:${pc};border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;margin-top:14px;">${pl}</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="if(gameIdx>0){gameIdx--;gameFlipped=false;renderGame();}" ${gameIdx===0?'disabled':''} style="flex:1;padding:14px;background:transparent;border:1px solid ${t.border};color:${gameIdx===0?t.sub:t.txt};border-radius:8px;font-size:16px;font-weight:700;opacity:${gameIdx===0?0.4:1};">← Prev</button>
+        <button onclick="if(gameIdx<gameCards.length-1){gameIdx++;gameFlipped=false;renderGame();}" ${gameIdx===gameCards.length-1?'disabled':''} style="flex:2;padding:14px;background:${gameIdx===gameCards.length-1?'transparent':`linear-gradient(135deg,${t.acc},${t.acc2})`};border:${gameIdx===gameCards.length-1?`1px solid ${t.border}`:'none'};color:${gameIdx===gameCards.length-1?t.sub:'white'};border-radius:8px;font-size:16px;font-weight:700;opacity:${gameIdx===gameCards.length-1?0.4:1};">Next →</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── WORDS ─────────────────────────────────────────
+function renderWords(search=''){
+  const t=T();
+  const words=VOCAB[week].filter(w=>w.en.toLowerCase().includes(search.toLowerCase())||w.ko.includes(search));
+  document.getElementById('page-words').innerHTML=`
+  <div style="min-height:100vh;background:${t.bg};">
+    <header style="background:${t.card};border-bottom:1px solid ${t.border};padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;">
+      <button onclick="showPage('home')" style="background:${t.acc}22;border:1px solid ${t.acc}55;color:${t.acc};font-size:15px;font-weight:700;padding:8px 16px;border-radius:8px;display:flex;align-items:center;gap:8px;">🏠 홈으로</button>
+      <button onclick="dark=!dark;applyTheme();" style="background:transparent;border:1px solid ${t.border};color:${t.sub};border-radius:6px;padding:4px 10px;font-size:13px;">${dark?'☀️ Light':'🌙 Dark'}</button>
+    </header>
+    <div style="padding:20px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+        <span style="font-size:20px;">📚</span>
+        <h2 style="color:${t.txt};font-size:20px;font-weight:700;margin:0;">Voca~ Voca!!</h2>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button onclick="week=1;renderWords('');" style="flex:1;padding:8px 0;background:${week===1?`linear-gradient(135deg,${t.acc},${t.acc2})`:'transparent'};color:${week===1?'#fff':t.sub};border:1px solid ${week===1?'transparent':t.border};border-radius:6px;font-size:13px;font-weight:${week===1?700:400};">Week 1</button>
+        <button onclick="week=2;renderWords('');" style="flex:1;padding:8px 0;background:${week===2?`linear-gradient(135deg,${t.acc},${t.acc2})`:'transparent'};color:${week===2?'#fff':t.sub};border:1px solid ${week===2?'transparent':t.border};border-radius:6px;font-size:13px;font-weight:${week===2?700:400};">Week 2</button>
+      </div>
+      <div style="position:relative;margin-bottom:14px;">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:${t.sub};font-size:14px;">🔍</span>
+        <input oninput="renderWords(this.value)" value="${search}" placeholder="단어 검색..." style="width:100%;padding:9px 12px 9px 34px;background:${t.inputBg};border:1px solid ${t.border};border-radius:8px;color:${t.txt};font-size:14px;outline:none;"/>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span style="color:${t.sub};font-size:12px;">${words.length}개 단어</span>
+        <div style="display:flex;gap:6px;">
+          ${['v','n','a','ad'].map(p=>`<span style="background:${posColor[p]}22;color:${posColor[p]};border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">${posLabel[p]}</span>`).join('')}
+        </div>
+      </div>
+      ${words.map(w=>`
+        <div style="background:${t.card};border:1px solid ${t.border};border-radius:8px;padding:13px 14px;margin-bottom:6px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 1px 3px ${t.shadow};">
+          <div style="width:28px;height:28px;background:${t.badge};border-radius:6px;display:flex;align-items:center;justify-content:center;color:${t.sub};font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px;">${w.n}</div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-bottom:5px;">
+              <span style="color:${t.txt};font-size:20px;font-weight:800;">${w.en}</span>
+              <span style="background:${posColor[w.pos]||'#888'}22;color:${posColor[w.pos]||'#888'};border-radius:5px;padding:2px 7px;font-size:11px;font-weight:700;">${posLabel[w.pos]||w.pos}</span>
+            </div>
+            <div style="color:${t.sub};font-size:14px;line-height:1.6;word-break:keep-all;">${w.ko}</div>
+          </div>
+        </div>`).join('')}
+      <div style="height:20px;"></div>
+    </div>
+  </div>`;
+}
+
+// 초기화
+buildGameCards(1);
+renderHome();
+</script>
+</body>
+</html>
