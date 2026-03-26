@@ -160,7 +160,7 @@ const PL={'v':'동사','n':'명사','a':'형용사','ad':'부사','v/n':'동/명
 const DK={bg:'#0d1117',card:'#161b22',border:'#30363d',txt:'#e6edf3',sub:'#8b949e',acc:'#7c3aed',acc2:'#db2777',inp:'#21262d',sh:'rgba(0,0,0,0.4)',badge:'#21262d'};
 const LT={bg:'#f6f8fa',card:'#ffffff',border:'#d0d7de',txt:'#1f2328',sub:'#57606a',acc:'#6e40c9',acc2:'#bf4b8a',inp:'#f6f8fa',sh:'rgba(31,35,40,0.12)',badge:'#eaeef2'};
 
-let dark=true, week=1, gCards=[], gIdx=0, gFlip=false;
+let dark=false, week=1, gCards=[], gIdx=0, gFlip=false;
 const T=()=>dark?DK:LT;
 const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
 
